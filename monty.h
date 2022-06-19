@@ -1,12 +1,17 @@
-#ifndef MONTY_H
-#define MONTY_H
-#define _GNU_SOURCE
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#ifndef _MONTY_
+#define _MONTY_
+#define _POSIX_C_SOURCE 200809L /* for the dprintf */
+#define _GNU_SOURCE             /* for the dprintf */
 
-extern char *argtoint;
+/* liabraries */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <ctype.h>
 
 /**
  * struct stack_s - doubly linked list representation of a stack (or queue)
@@ -19,9 +24,9 @@ extern char *argtoint;
  */
 typedef struct stack_s
 {
-        int n;
-        struct stack_s *prev;
-        struct stack_s *next;
+	int n;
+	struct stack_s *prev;
+	struct stack_s *next;
 } stack_t;
 
 /**
@@ -34,34 +39,74 @@ typedef struct stack_s
  */
 typedef struct instruction_s
 {
-        char *opcode;
-        void (*f)(stack_t **stack, unsigned int line_number);
+	char *opcode;
+	void (*f)(stack_t **stack, unsigned int line_number);
 } instruction_t;
 
+/**
+ * struct code_arg - structure for the functions
+ * @fd: file descriptor
+ * @buffer: input text
+ * @lifo: is stack or queue
+ * @arg: second parameter in the current line
+ * @crnt: current line
+ * @head: doubly linked list
+ *
+ * Description: doubly linked list node structure
+ * for stack, queues, LIFO, FIFO
+ */
+typedef struct code_arg
+{
+	FILE *fd;
+	char *buffer;
+	int lifo;
+	stack_t *head;
+	unsigned int crnt;
+	char *arg;
+} code_arg_t;
 
+extern code_arg_t allin;
 
+/* interpreter instruction */
+void _push(stack_t **stack, unsigned int line_number);
+void _pall(stack_t **stack, unsigned int line_number);
+void _pint(stack_t **doubly, unsigned int cline);
+void _pop(stack_t **doubly, unsigned int cline);
+void _swap(stack_t **doubly, unsigned int cline);
 
-size_t dlistint_len(const stack_t *h);
-stack_t *add_dnodeint(stack_t **head, const int n);
-int delete_dnodeint_at_index(stack_t **head, unsigned int index);
-stack_t *get_dnodeint_at_index(stack_t *head, unsigned int index);
-stack_t *insert_dnodeint_at_index(stack_t **h, unsigned int idx, int n);
-stack_t *add_dnodeint_end(stack_t **head, const int n);
+void _add(stack_t **doubly, unsigned int cline);
+void _nop(stack_t **doubly, unsigned int cline);
+void _sub(stack_t **doubly, unsigned int cline);
+void _div(stack_t **doubly, unsigned int cline);
+void _mul(stack_t **doubly, unsigned int cline);
+void _mod(stack_t **doubly, unsigned int cline);
 
+void _pchar(stack_t **doubly, unsigned int cline);
+void _pstr(stack_t **doubly, unsigned int cline);
+void _rotl(stack_t **doubly, unsigned int cline);
+void _rotr(stack_t **doubly, unsigned int cline);
 
+void _queue(stack_t **doubly, unsigned int cline);
+void _stack(stack_t **doubly, unsigned int cline);
 
-void (*get_func(char *str))(stack_t **, unsigned int);
+/* interpreter function */
+void (*get_opcodes(char *opc))(stack_t **stack, unsigned int line_number);
 
+/* uitls functions */
+int _sch(char *s, char c);
+char *_strtoky(char *s, char *d);
+void *_realloc(void *ptr, unsigned int osize, unsigned int nsize);
+void *_calloc(unsigned int eles, unsigned int size);
+int _strcmp(char *s1, char *s2);
 
-void push_func(stack_t **h, unsigned int line_number);
-void pall_func(stack_t **h, unsigned int line_number);
-void nop_func(stack_t **h, unsigned int line_number);
-void pint_func(stack_t **h, unsigned int line_number);
-void pop_func(stack_t **h, unsigned int line_number);
-void swap_func(stack_t **h, unsigned int line_number);
-void add_func(stack_t **h, unsigned int line_number);
-void sub_func(stack_t **h, unsigned int line_number);
-void div_func(stack_t **h, unsigned int line_number);
-void mul_func(stack_t **h, unsigned int line_number);
-void mod_func(stack_t **h, unsigned int line_number);
+/* doubly linked list functions */
+stack_t *nodeadd_end(stack_t **head, const int n);
+stack_t *nodeadd(stack_t **head, const int n);
+void free_double(stack_t *head);
+
+/* file check */
+void free_allin(void);
+void initiate_allin(FILE *fd);
+FILE *check_input(int argc, char *argv[]);
+
 #endif
